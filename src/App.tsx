@@ -270,14 +270,16 @@ export default function App() {
     if (next === "admin") {
       if (activeId) lastStudentRequest.current = activeId;
       navigate("/admin");
-    } else
+    } else {
+      const requestId = activeId || lastStudentRequest.current;
       navigate(
-        lastStudentRequest.current
-          ? "/request/" + encodeURIComponent(lastStudentRequest.current)
+        requestId
+          ? "/request/" + encodeURIComponent(requestId)
           : draft.category
             ? "/wizard/" + step
             : "/requests",
       );
+    }
   };
   const retryDraft = () => {
     try {
