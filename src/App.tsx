@@ -34,6 +34,7 @@ import {
 } from "./storage";
 import { Wizard } from "./Wizard";
 import { RequestDetail } from "./RequestDetail";
+import { loadTelegramSdk } from "./telegram-shell";
 import { EmptyState, Summary, StatusBadge, dateTime } from "./components";
 const DRAFT_KEY = "af.draft.v1";
 function initial() {
@@ -129,18 +130,7 @@ export default function App() {
       try {
         if (LIVE) {
           if (!window.Telegram) {
-            await new Promise<void>((resolve, reject) => {
-              const script = document.createElement("script");
-              script.src = "https://telegram.org/js/telegram-web-app.js";
-              script.onload = () => resolve();
-              script.onerror = () =>
-                reject(
-                  new Error(
-                    "Не удалось загрузить Telegram. Повторите открытие.",
-                  ),
-                );
-              document.head.appendChild(script);
-            });
+            await loadTelegramSdk();
           }
           window.Telegram?.WebApp.ready();
           window.Telegram?.WebApp.expand();

@@ -97,6 +97,8 @@ export type TelegramWebApp = {
   initData: string;
   ready: () => void;
   expand: () => void;
+  setHeaderColor?: (color: string) => void;
+  setBackgroundColor?: (color: string) => void;
   onEvent: (event: string, fn: () => void) => void;
   offEvent: (event: string, fn: () => void) => void;
   safeAreaInset?: { top: number; bottom: number };
