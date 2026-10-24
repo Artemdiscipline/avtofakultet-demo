@@ -18,7 +18,7 @@ import {
   type Draft,
 } from "./model";
 import { LIVE } from "./storage";
-import { Choice, ProgramCard, Summary, VehicleArt } from "./components";
+import { Choice, ProgramCard, Summary, VehiclePhoto } from "./components";
 export const stepTitles = [
   "Что хотите водить?",
   "Расскажите о вашем опыте",
@@ -154,14 +154,14 @@ export function Wizard({
                 description="Автомобиль"
                 selected={d.category === "B"}
                 onClick={() => setDraft(changeCategory(d, "B"))}
-                icon={<VehicleArt kind="car" />}
+                icon={<VehiclePhoto kind="car" />}
               />
               <Choice
                 title="Категория A"
                 description="Мотоцикл"
                 selected={d.category === "A"}
                 onClick={() => setDraft(changeCategory(d, "A"))}
-                icon={<VehicleArt kind="moto" />}
+                icon={<VehiclePhoto kind="moto" />}
               />
               <div className="help-choice">
                 <Choice

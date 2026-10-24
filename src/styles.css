@@ -133,15 +133,18 @@ small, .small { font-size: 13px; line-height: 1.6; }
 .selected .selection { background: var(--red); border-color: var(--red); }
 .choice-icon { display: flex; flex-shrink: 0; color: #456177; }
 .selected .choice-icon { color: #8e3337; }
-.vehicle-art { display: block; width: min(100%, 180px); height: 90px; }
-.direction-grid > .choice { position: relative; min-height: 190px; padding: 17px 22px; flex-direction: column; align-items: flex-start; background: #fafcfd; overflow: hidden; }
+.vehicle-photo { display: block; width: 100%; height: 140px; object-fit: cover; }
+.vehicle-photo-car { object-position: 62% 65%; }
+.vehicle-photo-moto { object-position: 50% 80%; }
+.direction-grid > .choice { position: relative; padding: 0; flex-direction: column; align-items: stretch; gap: 0; background: #fafcfd; overflow: hidden; }
 .direction-grid > .choice:hover { background: #f2f6f9; }
 .direction-grid > .choice.selected { background: #fff5f3; }
-.direction-grid > .choice .choice-icon { align-self: center; margin-top: 5px; max-width: 100%; }
-.direction-grid > .choice .choice-copy { flex: 0; margin-top: 10px; gap: 3px; }
+.direction-grid > .choice .choice-icon { display: block; width: 100%; }
+.direction-grid > .choice .choice-copy { flex: 0; padding: 14px 20px 18px; gap: 3px; }
 .direction-grid > .choice strong { font-family: "Manrope Variable", sans-serif; font-size: 20px; font-weight: 750; letter-spacing: -.4px; }
 .direction-grid > .choice .choice-copy > span { font-size: 13px; }
-.direction-grid > .choice .selection { position: absolute; right: 14px; top: 14px; }
+.direction-grid > .choice .selection { position: absolute; right: 12px; top: 12px; background: white; border-color: white; box-shadow: 0 1px 6px #182f4230; }
+.direction-grid > .choice.selected .selection { background: var(--red); border-color: white; }
 .help-choice { grid-column: 1/-1; }
 .help-choice .choice { background: #f7f9fb; min-height: 76px; }
 .help-choice .choice.selected { background: #fff6f4; }
@@ -348,8 +351,8 @@ legend { font-size: 15px; font-weight: 500; padding: 0; margin-bottom: 13px; }
   .school-photo figcaption { padding: 12px 9px; }
   .school-photo figcaption > span { font-size: 10px; }
   .header-meta > span, .saved-state { display: none; }
-  .direction-grid > .choice { padding: 17px; min-height: 190px; }
-  .vehicle-art { height: 78px; }
+  .vehicle-photo { height: 125px; }
+  .direction-grid > .choice .choice-copy { padding: 13px 16px 16px; }
   .direction-grid > .choice strong { font-size: 17px; }
   .guide-steps { gap: 15px; }
 }
@@ -391,12 +394,10 @@ legend { font-size: 15px; font-weight: 500; padding: 0; margin-bottom: 13px; }
   .start-meta { font-size: 9px; gap: 9px; margin: -6px 0 21px; }
   .start-meta svg { width: 12px; height: 12px; }
   .direction-grid { gap: 10px; }
-  .direction-grid > .choice { min-height: 145px; padding: 13px; }
-  .direction-grid > .choice .choice-copy { margin-top: 4px; gap: 2px; }
+  .direction-grid > .choice .choice-copy { padding: 11px 13px 14px; gap: 2px; }
   .direction-grid > .choice strong { font-size: 16px; }
   .direction-grid > .choice .choice-copy > span { font-size: 12px; }
-  .direction-grid > .choice .choice-icon { margin-top: 5px; }
-  .vehicle-art { width: 135px; height: 60px; }
+  .vehicle-photo { height: 96px; }
   .direction-grid > .choice .selection { width: 18px; height: 18px; top: 10px; right: 10px; }
   .help-choice .choice { padding: 12px 13px; min-height: 66px; gap: 10px; }
   .help-choice .choice strong { font-size: 12px; }
@@ -500,8 +501,8 @@ legend { font-size: 15px; font-weight: 500; padding: 0; margin-bottom: 13px; }
   .main-nav > button { font-size: 10px; }
   .panel { padding: 22px 17px; }
   h1 { font-size: 29px; }
-  .vehicle-art { width: 123px; }
-  .direction-grid > .choice { padding-inline: 11px; }
+  .vehicle-photo { height: 88px; }
+  .direction-grid > .choice .choice-copy { padding-inline: 11px; }
   .direction-grid > .choice strong { font-size: 15px; }
   .start-meta { font-size: 8px; gap: 7px; }
 }
