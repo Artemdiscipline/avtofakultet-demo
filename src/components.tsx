@@ -14,6 +14,28 @@ export const dateTime = (iso: string) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+export function VehicleArt({ kind }: { kind: "car" | "moto" }) {
+  return (
+    <svg className="vehicle-art" viewBox="0 0 180 90" fill="none" aria-hidden="true">
+      <path d="M8 76h164" stroke="currentColor" opacity=".15" strokeWidth="2" />
+      {kind === "car" ? <>
+        <path d="m25 53 10-23a8 8 0 0 1 7-5h80a12 12 0 0 1 9 5l15 22 14 5v14H19V58l6-5Z" fill="currentColor" fillOpacity=".06" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="m43 32-9 20h102l-15-20H43Z" fill="currentColor" fillOpacity=".09" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+        <path d="M81 33v19m-60 9h22m97 0h18M91 59h10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="m64 59 27 12h24L86 59H64Z" fill="var(--red)" opacity=".9" />
+        <circle cx="48" cy="70" r="12" fill="var(--paper)" stroke="currentColor" strokeWidth="2.5" /><circle cx="132" cy="70" r="12" fill="var(--paper)" stroke="currentColor" strokeWidth="2.5" />
+        <circle cx="48" cy="70" r="5" fill="currentColor" fillOpacity=".17" /><circle cx="132" cy="70" r="5" fill="currentColor" fillOpacity=".17" />
+        <path d="M72 24v-9h19v9" stroke="var(--red)" strokeWidth="2.5" /><path d="m78 20 3-3 3 3" stroke="var(--red)" strokeWidth="1.5" />
+      </> : <>
+        <circle cx="44" cy="65" r="17" fill="currentColor" fillOpacity=".04" stroke="currentColor" strokeWidth="2.5" /><circle cx="139" cy="65" r="17" fill="currentColor" fillOpacity=".04" stroke="currentColor" strokeWidth="2.5" />
+        <path d="m44 65 29-26 24 25H44Zm53-1 26-25m-7-17h10l13 43M45 43h28m-15-9h26l9 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M73 45h18l8 10-7 12H71l-6-13 8-9Z" fill="currentColor" fillOpacity=".4" stroke="currentColor" strokeWidth="2" /><path d="M75 51h14m-15 5h17m-15 5h13m-7 6 29 3 9-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path d="M84 34c3-10 19-14 29-4l8 8-22 13-15-17Z" fill="var(--red)" fillOpacity=".9" stroke="var(--red)" strokeWidth="2" />
+        <path d="M99 52v12H79l-7-14M34 40l-7 5m101-13h8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /><circle cx="139" cy="65" r="4" fill="currentColor" /><circle cx="44" cy="65" r="4" fill="currentColor" />
+      </>}
+    </svg>
+  );
+}
 export function StatusBadge({ status }: { status: Status }) {
   return (
     <span className={"status status-" + status}>
@@ -162,6 +184,7 @@ export function Summary({
           <button
             type="button"
             className="text-button"
+            aria-label={"Изменить: " + title}
             onClick={() => onEdit(step)}
           >
             Изменить

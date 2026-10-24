@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowLeft,
-  CarFront,
-  Bike,
   Compass,
   LockKeyhole,
   Check,
@@ -20,9 +18,9 @@ import {
   type Draft,
 } from "./model";
 import { LIVE } from "./storage";
-import { Choice, ProgramCard, Summary } from "./components";
+import { Choice, ProgramCard, Summary, VehicleArt } from "./components";
 export const stepTitles = [
-  "С чего начнём ваше обучение?",
+  "Что хотите водить?",
   "Расскажите о вашем опыте",
   "Когда вам удобно заниматься?",
   "Что хочется уточнить?",
@@ -52,9 +50,13 @@ export function Wizard({
 }) {
   const [validation, setValidation] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
+  const contactInput = useRef<HTMLInputElement>(null);
+  const hasOpened = useRef(false);
   useEffect(() => {
     setValidation("");
-    heading.current?.focus({ preventScroll: true });
+    if (hasOpened.current) heading.current?.focus({ preventScroll: true });
+    hasOpened.current = true;
   }, [step]);
   const patch = (p: Partial<Draft>) => setDraft({ ...d, ...p });
   const experienceOptions =
@@ -108,6 +110,8 @@ export function Wizard({
       const e = contactError(d.applicant);
       setValidation(e);
       if (!e) onSubmit();
+      else if (d.applicant.name.trim().length < 2) nameInput.current?.focus();
+      else contactInput.current?.focus();
     } else if (
       editMode &&
       step === 0 &&
@@ -117,13 +121,20 @@ export function Wizard({
       go(1);
     else go(editMode ? 5 : step + 1);
   };
+  const nextLabels = ["Дальше: мой опыт", "Дальше: удобное время", "Дальше: мои вопросы", "Посмотреть программы", "Проверить заявку"];
+  const readinessHint = step === 0 ? "Выберите направление, чтобы продолжить."
+    : step === 1 ? d.category === "B" ? "Выберите ваш опыт и коробку передач." : "Выберите подходящий ответ выше."
+    : "Укажите дни, время занятий и желаемое начало.";
   return (
     <section className="wizard panel" aria-label="Подбор обучения">
       <div className="panel-eyebrow">
-        <span>{step === 0 ? "ВАШ ПЕРВЫЙ ШАГ" : "ВАШ МАРШРУТ К ОБУЧЕНИЮ"}</span>
+        <span>{["ВЫБИРАЕМ НАПРАВЛЕНИЕ", "ВАША ТОЧКА СТАРТА", "ПЛАНИРУЕМ ОБУЧЕНИЕ", "УТОЧНЯЕМ ДЕТАЛИ", "НАХОДИМ ВАРИАНТЫ", "ФИНАЛЬНЫЙ ШАГ"][step]}</span>
         <span className="step-count">
           {String(step + 1).padStart(2, "0")} <i>/ 06</i>
         </span>
+      </div>
+      <div className="wizard-progress" aria-label={`Шаг ${step + 1} из 6`}>
+        {stepTitles.map((title, i) => <span key={title} className={i <= step ? "filled" : ""} />)}
       </div>
       <div className="wizard-content" key={step}>
         <h1 ref={heading} tabIndex={-1}>
@@ -134,23 +145,23 @@ export function Wizard({
         {step === 0 && (
           <>
             <p className="lead">
-              Ответьте на несколько вопросов — поможем разобраться в программах
-              и передадим пожелания администратору.
+              Выберите направление. Дальше учтём ваш опыт и удобное время занятий.
             </p>
+            <div className="start-meta"><span><Check size={14} />Около 2 минут</span><span><LockKeyhole size={14} />Без звонков на первом шаге</span></div>
             <div className="direction-grid">
               <Choice
                 title="Категория B"
                 description="Автомобиль"
                 selected={d.category === "B"}
                 onClick={() => setDraft(changeCategory(d, "B"))}
-                icon={<CarFront size={38} strokeWidth={1.5} />}
+                icon={<VehicleArt kind="car" />}
               />
               <Choice
                 title="Категория A"
                 description="Мотоцикл"
                 selected={d.category === "A"}
                 onClick={() => setDraft(changeCategory(d, "A"))}
-                icon={<Bike size={39} strokeWidth={1.5} />}
+                icon={<VehicleArt kind="moto" />}
               />
               <div className="help-choice">
                 <Choice
@@ -162,10 +173,6 @@ export function Wizard({
                 />
               </div>
             </div>
-            <p className="privacy-hint">
-              <LockKeyhole size={15} />
-              Начать можно без номера телефона
-            </p>
           </>
         )}
         {step === 1 && (
@@ -474,12 +481,16 @@ export function Wizard({
               contact={false}
             />
             <div className="contact-heading">
-              <h2>Как к вам обращаться?</h2>
+              <h2>Как с вами связаться?</h2>
+            </div>
               {!LIVE && (
+                <div className="test-fill">
+                  <div><strong>Пробуете демо?</strong><p>Заполните примером, чтобы пройти весь сценарий без личных контактов.</p></div>
                 <button
                   type="button"
-                  className="text-button"
-                  onClick={() =>
+                  className="button outline"
+                  onClick={() => {
+                    setValidation("");
                     patch({
                       applicant: {
                         name: "Тестовый ученик",
@@ -487,16 +498,17 @@ export function Wizard({
                         contact: "@demo_student",
                         contactTime: "После 18:00 · тестовые данные",
                       },
-                    })
-                  }
+                    });
+                  }}
                 >
                   Заполнить тестовыми данными <ChevronRight size={15} />
                 </button>
+                </div>
               )}
-            </div>
             <label className="field">
               Имя
               <input
+                ref={nameInput}
                 name="name"
                 autoComplete="given-name"
                 maxLength={80}
@@ -505,6 +517,8 @@ export function Wizard({
                   patch({ applicant: { ...d.applicant, name: e.target.value } })
                 }
                 placeholder="Ваше имя"
+                aria-invalid={!!validation && d.applicant.name.trim().length < 2}
+                aria-describedby={validation ? "contact-error" : undefined}
               />
             </label>
             <fieldset>
@@ -543,11 +557,14 @@ export function Wizard({
                   ? "Имя пользователя Telegram"
                   : "Номер телефона"}
                 <input
+                  ref={contactInput}
                   name="contact"
                   autoComplete={d.applicant.method === "phone" ? "tel" : "off"}
                   type={d.applicant.method === "phone" ? "tel" : "text"}
                   inputMode={d.applicant.method === "phone" ? "tel" : "text"}
                   maxLength={80}
+                  spellCheck={false}
+                  autoCapitalize="none"
                   value={d.applicant.contact}
                   onChange={(e) =>
                     patch({
@@ -559,7 +576,8 @@ export function Wizard({
                       ? "@username"
                       : "+7 999 123-45-67"
                   }
-                  aria-invalid={!!validation}
+                  aria-invalid={!!validation && d.applicant.name.trim().length >= 2}
+                  aria-describedby={validation ? "contact-error" : undefined}
                 />
                 <small>
                   {d.applicant.method === "telegram"
@@ -600,10 +618,11 @@ export function Wizard({
         )}
       </div>
       {(validation || error) && (
-        <div className="error" role="alert">
+        <div className="error" role="alert" id="contact-error">
           {validation || error}
         </div>
       )}
+      {!ready && <p className="readiness-hint" role="status"><Info size={16} />{readinessHint}</p>}
       <div className="wizard-actions">
         {step > 0 && (
           <button
@@ -633,9 +652,7 @@ export function Wizard({
                   : "Создать тестовую заявку"
               : editMode
                 ? "Сохранить и вернуться"
-                : step === 4
-                  ? "Проверить заявку"
-                  : "Продолжить"}
+                : step === 0 && d.category === "help" ? "Дальше: с чем помочь" : nextLabels[step]}
           {!busy && <ArrowRight size={19} />}
         </button>
       </div>

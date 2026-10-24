@@ -13,6 +13,10 @@ import {
   ShieldCheck,
   ExternalLink,
   RefreshCw,
+  UserRound,
+  BriefcaseBusiness,
+  Play,
+  ChevronDown,
 } from "lucide-react";
 import { faq, findProgram } from "./catalog";
 import {
@@ -66,7 +70,8 @@ const stages = [
   ["Опыт", "Ваша точка старта"],
   ["График", "Удобное время"],
   ["Вопросы", "Что важно для вас"],
-  ["Заявка", "Подбор и обсуждение"],
+  ["Программы", "Варианты для обсуждения"],
+  ["Заявка", "Проверка и контакт"],
 ];
 export default function App() {
   const [draft, setDraft] = useState<Draft>(first.draft),
@@ -257,9 +262,10 @@ export default function App() {
     }
   };
   const changeRole = (next: Actor["role"]) => {
+    if (next === role) return;
     if (next === "admin") {
       if (activeId) lastStudentRequest.current = activeId;
-      navigate("/admin");
+      navigate(activeId ? "/admin/" + encodeURIComponent(activeId) : "/admin");
     } else {
       const requestId = activeId || lastStudentRequest.current;
       navigate(
@@ -267,7 +273,7 @@ export default function App() {
           ? "/request/" + encodeURIComponent(requestId)
           : draft.category
             ? "/wizard/" + step
-            : "/requests",
+            : "/wizard/0",
       );
     }
   };
@@ -283,9 +289,10 @@ export default function App() {
     }
   };
   const isWizard = page === "wizard" && role === "student";
-  const currentStage = Math.min(step, 4);
+  const currentStage = step;
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content" onClick={(e) => { e.preventDefault(); document.getElementById("main-content")?.focus(); }}>К содержимому</a>
       <header className="site-header">
         <div className="header-inner">
           <button
@@ -319,7 +326,7 @@ export default function App() {
               {LIVE ? "Тестовый сервер" : "Демо"}
             </span>
             <span>
-              {LIVE ? "Отдельный тестовый проект" : "Попробуйте с обеих сторон"}
+              {LIVE ? "Отдельный тестовый проект" : "Сейчас вы в роли"}
             </span>
           </span>
           {!LIVE ? (
@@ -329,6 +336,7 @@ export default function App() {
                 className={role === "student" ? "active" : ""}
                 onClick={() => changeRole("student")}
               >
+                <UserRound size={15} aria-hidden="true" />
                 Ученик
               </button>
               <button
@@ -336,6 +344,7 @@ export default function App() {
                 className={role === "admin" ? "active" : ""}
                 onClick={() => changeRole("admin")}
               >
+                <BriefcaseBusiness size={15} aria-hidden="true" />
                 Администратор
               </button>
             </div>
@@ -390,7 +399,7 @@ export default function App() {
             <HelpCircle size={17} />
             Вопросы
           </button>
-          <span className="saved-state" aria-live="polite">
+          {isWizard && <span className="saved-state" aria-live="polite">
             {saved && !storageWarning ? (
               <>
                 <span className="green-dot" />
@@ -401,8 +410,24 @@ export default function App() {
             ) : (
               "Сохраняем…"
             )}
-          </span>
+          </span>}
         </nav>
+        {!LIVE && (
+          <details className="demo-guide">
+            <summary>
+              <span className="guide-icon"><Play size={14} aria-hidden="true" /></span>
+              <strong>Как показать демо</strong>
+              <span className="guide-caption">От анкеты до ответа школы за пару минут</span>
+              <ChevronDown size={17} className="guide-chevron" aria-hidden="true" />
+            </summary>
+            <div className="guide-steps">
+              <div><span>1</span><p><strong>Станьте учеником</strong>Пройдите анкету. На последнем шаге нажмите «Заполнить тестовыми данными» и создайте заявку.</p></div>
+              <div><span>2</span><p><strong>Ответьте за школу</strong>Переключитесь на администратора. Задайте уточняющий вопрос или предложите программу.</p></div>
+              <div><span>3</span><p><strong>Посмотрите результат</strong>Вернитесь в роль ученика: ответьте на вопрос или отметьте интерес к программе.</p></div>
+            </div>
+            <p className="guide-footnote">Обе роли работают с одной заявкой. В демо данные сохраняются только в этом браузере.</p>
+          </details>
+        )}
         {storageWarning && (
           <div className="error global-error" role="alert">
             {storageWarning}
@@ -430,8 +455,8 @@ export default function App() {
             {isWizard ? (
               <>
                 <div className="route-heading">
-                  <span className="eyebrow">МАРШРУТ ПОСТУПЛЕНИЯ</span>
-                  <span className="small muted">{currentStage + 1} из 5</span>
+                  <span className="eyebrow">ВАШ МАРШРУТ</span>
+                  <span className="small muted">{currentStage + 1} из 6</span>
                 </div>
                 <ol className="route-steps">
                   {stages.map(([title, description], i) => (
@@ -448,7 +473,8 @@ export default function App() {
                       <button
                         aria-label={"Этап " + (i + 1) + ": " + title}
                         disabled={i > step}
-                        onClick={() => go(i === 4 ? 4 : i)}
+                        aria-current={i === step ? "step" : undefined}
+                        onClick={() => go(i)}
                       >
                         <span className="route-marker">
                           {i < currentStage ? <Check size={14} /> : i + 1}
@@ -483,6 +509,8 @@ export default function App() {
               <img
                 src={import.meta.env.BASE_URL + "images/fleet.jpg"}
                 alt="Учебный Skoda Rapid автошколы «Автофакультет»"
+                width="700"
+                height="420"
               />
               <figcaption>
                 <span>Учиться. Пробовать. Ехать.</span>
@@ -510,7 +538,7 @@ export default function App() {
               </div>
             )}
           </aside>
-          <main id="main-content">
+          <main id="main-content" tabIndex={-1}>
             {LIVE && !actor ? (
               <section className="panel">
                 <h1>Открываем приложение</h1>
@@ -607,25 +635,23 @@ export default function App() {
                   {LIVE ? "Ваш запрос сохранён" : "Тестовая заявка сохранена"}
                 </h1>
                 <p className="lead">
-                  Администратор посмотрит ваши пожелания и поможет уточнить
-                  программу и условия обучения.
+                  {LIVE ? "Ваши пожелания готовы для обсуждения с администратором." : "Путь ученика пройден. Теперь посмотрите, как с этим обращением работает школа."}
                 </p>
                 <div className="success-reference">
                   <strong>{selected.id}</strong>
                   <StatusBadge status={selected.status} />
                 </div>
-                <Summary
-                  draft={selected}
-                  snapshots={selected.programSnapshots}
-                />
-                <p className="demo-notice">
-                  <LockKeyhole size={20} />
-                  {LIVE
-                    ? "Заявка в отдельном тестовом проекте. Действующая школа не подключена."
-                    : "Это тестовая заявка. Она сохранена в этом браузере и не отправлена школе."}
-                </p>
+                {!LIVE && (
+                  <div className="next-scene">
+                    <span className="scene-icon"><BriefcaseBusiness size={24} /></span>
+                    <div><span className="eyebrow">СЛЕДУЮЩИЙ ШАГ ПОКАЗА</span><h2>Теперь — на сторону школы</h2><p>Откроется эта же заявка. Можно задать вопрос ученику или предложить программу.</p></div>
+                    <button className="button primary" onClick={() => navigate("/admin/" + encodeURIComponent(selected.id))}>
+                      Открыть как администратор <ArrowRight size={18} />
+                    </button>
+                  </div>
+                )}
                 <button
-                  className="button primary"
+                  className={"button " + (LIVE ? "primary" : "outline")}
                   onClick={() =>
                     navigate("/request/" + encodeURIComponent(selected.id))
                   }
@@ -633,16 +659,16 @@ export default function App() {
                   Открыть мою заявку
                   <ArrowRight size={18} />
                 </button>
-                {!LIVE && (
-                  <button
-                    className="button outline"
-                    onClick={() =>
-                      navigate("/admin/" + encodeURIComponent(selected.id))
-                    }
-                  >
-                    Посмотреть глазами администратора
-                  </button>
-                )}
+                <details className="request-summary success-summary">
+                  <summary>Что сохранилось в заявке <ChevronDown size={18} /></summary>
+                  <Summary draft={selected} snapshots={selected.programSnapshots} />
+                </details>
+                <p className="demo-notice">
+                  <LockKeyhole size={20} />
+                  {LIVE
+                    ? "Заявка в отдельном тестовом проекте. Действующая школа не подключена."
+                    : "Тестовая заявка сохранена в этом браузере и не отправлена школе."}
+                </p>
                 <button className="text-button start-over" onClick={fresh}>
                   Вернуться к началу
                 </button>
@@ -655,6 +681,7 @@ export default function App() {
                 onAction={act}
                 busy={busy}
                 error={error}
+                onPreviewRole={!LIVE ? () => changeRole(role === "admin" ? "student" : "admin") : undefined}
                 onBack={() =>
                   navigate(role === "admin" ? "/admin" : "/requests")
                 }
