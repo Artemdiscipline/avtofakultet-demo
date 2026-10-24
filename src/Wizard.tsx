@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowRight,
-  ArrowLeft,
-  Compass,
-  LockKeyhole,
-  Check,
-  ChevronRight,
-  Info,
-} from "lucide-react";
+import { ArrowRight, ArrowLeft, Compass, Check, Info } from "lucide-react";
 import { programs, findProgram } from "./catalog";
 import {
   changeCategory,
@@ -18,14 +10,20 @@ import {
   type Draft,
 } from "./model";
 import { LIVE } from "./storage";
-import { Choice, ProgramCard, Summary, VehiclePhoto } from "./components";
+import {
+  Choice,
+  ProgramCard,
+  Summary,
+  VehiclePhoto,
+  ReviewAnswers,
+} from "./components";
 export const stepTitles = [
-  "Что хотите водить?",
-  "Расскажите о вашем опыте",
-  "Когда вам удобно заниматься?",
-  "Что хочется уточнить?",
-  "Программы для обсуждения",
-  "Всё верно? Давайте проверим",
+  "Направление обучения",
+  "Опыт вождения",
+  "График занятий",
+  "Вопросы школе",
+  "Подходящие программы",
+  "Проверка заявки",
 ];
 export function Wizard({
   draft: d,
@@ -59,6 +57,7 @@ export function Wizard({
     hasOpened.current = true;
   }, [step]);
   const patch = (p: Partial<Draft>) => setDraft({ ...d, ...p });
+  const recommended = recommendation(d);
   const experienceOptions =
     d.category === "A"
       ? [
@@ -105,6 +104,10 @@ export function Wizard({
             !!d.schedulePreferences.times.length &&
             !!d.desiredStart
           : true;
+  const needsDirectionDetails =
+    step === 0 &&
+    ((d.category === "help" && !d.helpFocus) ||
+      (d.category !== "help" && !d.experience));
   const proceed = () => {
     if (step === 5) {
       const e = contactError(d.applicant);
@@ -112,61 +115,66 @@ export function Wizard({
       if (!e) onSubmit();
       else if (d.applicant.name.trim().length < 2) nameInput.current?.focus();
       else contactInput.current?.focus();
-    } else if (
-      editMode &&
-      step === 0 &&
-      ((d.category === "help" && !d.helpFocus) ||
-        (d.category !== "help" && !d.experience))
-    )
-      go(1);
+    } else if (editMode && needsDirectionDetails) go(1);
     else go(editMode ? 5 : step + 1);
   };
-  const nextLabels = ["Дальше: мой опыт", "Дальше: удобное время", "Дальше: мои вопросы", "Посмотреть программы", "Проверить заявку"];
-  const readinessHint = step === 0 ? "Выберите направление, чтобы продолжить."
-    : step === 1 ? d.category === "B" ? "Выберите ваш опыт и коробку передач." : "Выберите подходящий ответ выше."
-    : "Укажите дни, время занятий и желаемое начало.";
+  const nextLabels = [
+    "Указать опыт",
+    "Выбрать график",
+    "Перейти к вопросам",
+    "Посмотреть программы",
+    "Проверить заявку",
+  ];
+  const readinessHint =
+    step === 0
+      ? "Выберите направление, чтобы продолжить."
+      : step === 1
+        ? d.category === "B"
+          ? "Выберите ваш опыт и коробку передач."
+          : "Выберите подходящий ответ выше."
+        : "Укажите дни, время занятий и желаемое начало.";
   return (
     <section className="wizard panel" aria-label="Подбор обучения">
       <div className="panel-eyebrow">
-        <span>{["ВЫБИРАЕМ НАПРАВЛЕНИЕ", "ВАША ТОЧКА СТАРТА", "ПЛАНИРУЕМ ОБУЧЕНИЕ", "УТОЧНЯЕМ ДЕТАЛИ", "НАХОДИМ ВАРИАНТЫ", "ФИНАЛЬНЫЙ ШАГ"][step]}</span>
-        <span className="step-count">
-          {String(step + 1).padStart(2, "0")} <i>/ 06</i>
-        </span>
+        <span>Заявка на обучение</span>
+        <span className="step-count">Шаг {step + 1} из 6</span>
       </div>
       <div className="wizard-progress" aria-label={`Шаг ${step + 1} из 6`}>
-        {stepTitles.map((title, i) => <span key={title} className={i <= step ? "filled" : ""} />)}
+        {stepTitles.map((title, i) => (
+          <span key={title} className={i <= step ? "filled" : ""} />
+        ))}
       </div>
       <div className="wizard-content" key={step}>
         <h1 ref={heading} tabIndex={-1}>
           {step === 1 && d.category === "help"
-            ? "С чем помочь разобраться?"
+            ? "Выбор направления"
             : stepTitles[step]}
         </h1>
         {step === 0 && (
           <>
             <p className="lead">
-              Выберите направление. Дальше учтём ваш опыт и удобное время занятий.
+              Выберите категорию. Затем укажите опыт вождения и удобное время
+              занятий.
             </p>
-            <div className="start-meta"><span><Check size={14} />Около 2 минут</span><span><LockKeyhole size={14} />Без звонков на первом шаге</span></div>
             <div className="direction-grid">
               <Choice
-                title="Категория B"
-                description="Автомобиль"
+                title="Автомобиль"
+                description="Категория B"
                 selected={d.category === "B"}
                 onClick={() => setDraft(changeCategory(d, "B"))}
                 icon={<VehiclePhoto kind="car" />}
               />
               <Choice
-                title="Категория A"
-                description="Мотоцикл"
+                title="Мотоцикл"
+                description="Категория A"
                 selected={d.category === "A"}
                 onClick={() => setDraft(changeCategory(d, "A"))}
                 icon={<VehiclePhoto kind="moto" />}
               />
               <div className="help-choice">
                 <Choice
-                  title="Пока не знаю — нужна помощь"
-                  description="Разберёмся вместе"
+                  title="Нужна консультация"
+                  description="Помогите выбрать направление"
                   selected={d.category === "help"}
                   onClick={() => setDraft(changeCategory(d, "help"))}
                   icon={<Compass size={25} strokeWidth={1.5} />}
@@ -426,12 +434,17 @@ export function Wizard({
         {step === 4 && (
           <>
             <p className="lead">
-              {recommendation(d).length
-                ? "Эти варианты подходят для разговора с сотрудником. Можно выбрать программу или оставить запрос на консультацию."
+              {recommended.length
+                ? "Варианты подобраны по вашим ответам. Отметьте интересующие программы или выберите консультацию."
                 : "Администратор поможет подобрать программу под ваш случай. Выбирать тариф для обращения не нужно."}
             </p>
-            <div className="program-grid">
-              {recommendation(d).map(({ program, reason }) => (
+            <div
+              className={
+                "program-grid " +
+                (recommended.length === 1 ? "single-program" : "")
+              }
+            >
+              {recommended.map(({ program, reason }) => (
                 <ProgramCard
                   key={program.id}
                   program={program}
@@ -469,139 +482,168 @@ export function Wizard({
         {step === 5 && (
           <>
             <p className="lead">
-              Проверьте пожелания и оставьте удобный способ связи. Окончательные
-              условия согласует сотрудник школы.
+              Проверьте ответы и укажите контакт для обсуждения обучения.
             </p>
-            <Summary
-              draft={d}
-              snapshots={d.interestedPrograms
-                .map((id) => findProgram(id)!)
-                .filter(Boolean)}
-              onEdit={go}
-              contact={false}
-            />
-            <div className="contact-heading">
-              <h2>Как с вами связаться?</h2>
-            </div>
-              {!LIVE && (
-                <div className="test-fill">
-                  <div><strong>Пробуете демо?</strong><p>Заполните примером, чтобы пройти весь сценарий без личных контактов.</p></div>
-                <button
-                  type="button"
-                  className="button outline"
-                  onClick={() => {
-                    setValidation("");
-                    patch({
-                      applicant: {
-                        name: "Тестовый ученик",
-                        method: "telegram",
-                        contact: "@demo_student",
-                        contactTime: "После 18:00 · тестовые данные",
-                      },
-                    });
-                  }}
-                >
-                  Заполнить тестовыми данными <ChevronRight size={15} />
-                </button>
-                </div>
-              )}
-            <label className="field">
-              Имя
-              <input
-                ref={nameInput}
-                name="name"
-                autoComplete="given-name"
-                maxLength={80}
-                value={d.applicant.name}
-                onChange={(e) =>
-                  patch({ applicant: { ...d.applicant, name: e.target.value } })
-                }
-                placeholder="Ваше имя"
-                aria-invalid={!!validation && d.applicant.name.trim().length < 2}
-                aria-describedby={validation ? "contact-error" : undefined}
-              />
-            </label>
-            <fieldset>
-              <legend>Удобный способ связи</legend>
-              <div className="two-columns">
-                {(["telegram", "phone"] as const).map((method) => (
-                  <Choice
-                    key={method}
-                    title={method === "telegram" ? "Telegram" : "Телефон"}
-                    selected={d.applicant.method === method}
-                    onClick={() =>
+            <div className="review-layout">
+              <ReviewAnswers
+                caption={[
+                  labels.category[d.category],
+                  d.category === "B" ? labels.transmission[d.transmission] : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              >
+                <Summary
+                  draft={d}
+                  snapshots={d.interestedPrograms
+                    .map((id) => findProgram(id)!)
+                    .filter(Boolean)}
+                  onEdit={go}
+                  contact={false}
+                />
+              </ReviewAnswers>
+              <section
+                className="review-contact"
+                aria-labelledby="contact-heading"
+              >
+                <h2 id="contact-heading">Контакт для ответа</h2>
+                {!LIVE && (
+                  <div className="test-fill">
+                    <span>Для демонстрации</span>
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => {
+                        setValidation("");
+                        patch({
+                          applicant: {
+                            name: "Тестовый ученик",
+                            method: "telegram",
+                            contact: "@demo_student",
+                            contactTime: "После 18:00 · тестовые данные",
+                          },
+                        });
+                      }}
+                    >
+                      Заполнить тестовыми данными
+                    </button>
+                  </div>
+                )}
+                <label className="field">
+                  Имя
+                  <input
+                    ref={nameInput}
+                    name="name"
+                    autoComplete="given-name"
+                    maxLength={80}
+                    value={d.applicant.name}
+                    onChange={(e) =>
+                      patch({
+                        applicant: { ...d.applicant, name: e.target.value },
+                      })
+                    }
+                    placeholder="Ваше имя"
+                    aria-invalid={
+                      !!validation && d.applicant.name.trim().length < 2
+                    }
+                    aria-describedby={validation ? "contact-error" : undefined}
+                  />
+                </label>
+                <fieldset>
+                  <legend>Удобный способ связи</legend>
+                  <div className="two-columns">
+                    {(["telegram", "phone"] as const).map((method) => (
+                      <Choice
+                        key={method}
+                        title={method === "telegram" ? "Telegram" : "Телефон"}
+                        selected={d.applicant.method === method}
+                        onClick={() =>
+                          patch({
+                            applicant: {
+                              ...d.applicant,
+                              method,
+                              contact:
+                                method === d.applicant.method
+                                  ? d.applicant.contact
+                                  : "",
+                            },
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                </fieldset>
+                {LIVE && d.applicant.method === "telegram" ? (
+                  <p className="info-line">
+                    <Check size={18} />
+                    Для связи используем ваш подтверждённый Telegram через
+                    отдельного бота проекта.
+                  </p>
+                ) : (
+                  <label className="field">
+                    {d.applicant.method === "telegram"
+                      ? "Имя пользователя Telegram"
+                      : "Номер телефона"}
+                    <input
+                      ref={contactInput}
+                      name="contact"
+                      autoComplete={
+                        d.applicant.method === "phone" ? "tel" : "off"
+                      }
+                      type={d.applicant.method === "phone" ? "tel" : "text"}
+                      inputMode={
+                        d.applicant.method === "phone" ? "tel" : "text"
+                      }
+                      maxLength={80}
+                      spellCheck={false}
+                      autoCapitalize="none"
+                      value={d.applicant.contact}
+                      onChange={(e) =>
+                        patch({
+                          applicant: {
+                            ...d.applicant,
+                            contact: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder={
+                        d.applicant.method === "telegram"
+                          ? "@username"
+                          : "+7 999 123-45-67"
+                      }
+                      aria-invalid={
+                        !!validation && d.applicant.name.trim().length >= 2
+                      }
+                      aria-describedby={
+                        validation ? "contact-error" : undefined
+                      }
+                    />
+                    <small>
+                      {d.applicant.method === "telegram"
+                        ? "Телефон не требуется. В демо используйте тестовый контакт."
+                        : "В демо используйте тестовый номер."}
+                    </small>
+                  </label>
+                )}
+                <label className="field">
+                  Время для связи (необязательно)
+                  <input
+                    maxLength={200}
+                    value={d.applicant.contactTime}
+                    onChange={(e) =>
                       patch({
                         applicant: {
                           ...d.applicant,
-                          method,
-                          contact:
-                            method === d.applicant.method
-                              ? d.applicant.contact
-                              : "",
+                          contactTime: e.target.value,
                         },
                       })
                     }
+                    placeholder="Например, по будням после 18:00"
                   />
-                ))}
-              </div>
-            </fieldset>
-            {LIVE && d.applicant.method === "telegram" ? (
-              <p className="info-line">
-                <Check size={18} />
-                Для связи используем ваш подтверждённый Telegram через
-                отдельного бота проекта.
-              </p>
-            ) : (
-              <label className="field">
-                {d.applicant.method === "telegram"
-                  ? "Имя пользователя Telegram"
-                  : "Номер телефона"}
-                <input
-                  ref={contactInput}
-                  name="contact"
-                  autoComplete={d.applicant.method === "phone" ? "tel" : "off"}
-                  type={d.applicant.method === "phone" ? "tel" : "text"}
-                  inputMode={d.applicant.method === "phone" ? "tel" : "text"}
-                  maxLength={80}
-                  spellCheck={false}
-                  autoCapitalize="none"
-                  value={d.applicant.contact}
-                  onChange={(e) =>
-                    patch({
-                      applicant: { ...d.applicant, contact: e.target.value },
-                    })
-                  }
-                  placeholder={
-                    d.applicant.method === "telegram"
-                      ? "@username"
-                      : "+7 999 123-45-67"
-                  }
-                  aria-invalid={!!validation && d.applicant.name.trim().length >= 2}
-                  aria-describedby={validation ? "contact-error" : undefined}
-                />
-                <small>
-                  {d.applicant.method === "telegram"
-                    ? "Телефон не требуется. В демо используйте тестовый контакт."
-                    : "В демо используйте тестовый номер."}
-                </small>
-              </label>
-            )}
-            <label className="field">
-              Когда удобно связаться{" "}
-              <span className="optional">необязательно</span>
-              <input
-                maxLength={200}
-                value={d.applicant.contactTime}
-                onChange={(e) =>
-                  patch({
-                    applicant: { ...d.applicant, contactTime: e.target.value },
-                  })
-                }
-                placeholder="Например, по будням после 18:00"
-              />
-            </label>
+                </label>
+              </section>
+            </div>
             <div className="demo-notice">
-              <ShieldCheckIcon />
               {LIVE ? (
                 <p>
                   Запрос сохранится на тестовом сервере проекта. Это обращение
@@ -609,8 +651,8 @@ export function Wizard({
                 </p>
               ) : (
                 <p>
-                  Это тестовая заявка. Она сохранится в этом браузере и не будет
-                  отправлена автошколе.
+                  Тестовая заявка сохранится в этом браузере. Автошкола её не
+                  получит.
                 </p>
               )}
             </div>
@@ -622,7 +664,12 @@ export function Wizard({
           {validation || error}
         </div>
       )}
-      {!ready && <p className="readiness-hint" role="status"><Info size={16} />{readinessHint}</p>}
+      {!ready && (
+        <p className="readiness-hint" role="status">
+          <Info size={16} />
+          {readinessHint}
+        </p>
+      )}
       <div className="wizard-actions">
         {step > 0 && (
           <button
@@ -650,9 +697,11 @@ export function Wizard({
                 : LIVE
                   ? "Отправить запрос на подбор"
                   : "Создать тестовую заявку"
-              : editMode
+              : editMode && !needsDirectionDetails
                 ? "Сохранить и вернуться"
-                : step === 0 && d.category === "help" ? "Дальше: с чем помочь" : nextLabels[step]}
+                : step === 0 && d.category === "help"
+                  ? "Уточнить направление"
+                  : nextLabels[step]}
           {!busy && <ArrowRight size={19} />}
         </button>
       </div>
@@ -672,7 +721,4 @@ export function Wizard({
       )}
     </section>
   );
-}
-function ShieldCheckIcon() {
-  return <LockKeyhole size={22} />;
 }

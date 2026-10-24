@@ -1,10 +1,5 @@
-import {
-  ArrowUpRight,
-  Check,
-  ChevronRight,
-  ExternalLink,
-  ShieldCheck,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ChevronRight, ExternalLink, ChevronDown } from "lucide-react";
 import { type Program, priceText, money } from "./catalog";
 import { labels, type Draft, type Application, type Status } from "./model";
 export const dateTime = (iso: string) =>
@@ -33,6 +28,38 @@ export function StatusBadge({ status }: { status: Status }) {
       <i />
       {labels.status[status]}
     </span>
+  );
+}
+export function ReviewAnswers({
+  caption,
+  children,
+}: {
+  caption: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(
+    () => window.matchMedia("(min-width: 1120px)").matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1120px)");
+    const resize = () => setOpen(media.matches);
+    media.addEventListener("change", resize);
+    return () => media.removeEventListener("change", resize);
+  }, []);
+  return (
+    <details
+      className="review-answers"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        <span>
+          Ваши пожелания<small>{caption}</small>
+        </span>
+        <ChevronDown size={17} aria-hidden="true" />
+      </summary>
+      {children}
+    </details>
   );
 }
 export function Choice({
@@ -121,12 +148,7 @@ export function ProgramCard({
             </p>
           )}
           {p.caution && <p className="program-caution">{p.caution}</p>}
-          {reason && (
-            <p className="reason">
-              <ShieldCheck size={16} />
-              {reason}
-            </p>
-          )}
+          {reason && <p className="reason">{reason}</p>}
         </>
       )}
       <div className="source-line">
@@ -169,7 +191,7 @@ export function Summary({
   snapshots = snapshots?.filter((p) => d.interestedPrograms.includes(p.id));
   const block = (title: string, step: number, children: React.ReactNode) => (
     <div className="summary-block" key={title}>
-      <div className="summary-label">
+      <dt className="summary-label">
         <span>{title}</span>
         {onEdit && (
           <button
@@ -181,12 +203,12 @@ export function Summary({
             Изменить
           </button>
         )}
-      </div>
-      <div className="summary-value">{children}</div>
+      </dt>
+      <dd className="summary-value">{children}</dd>
     </div>
   );
   return (
-    <div className="summary">
+    <dl className="summary">
       {block(
         "Направление",
         0,
@@ -260,7 +282,7 @@ export function Summary({
             )}
           </>,
         )}
-    </div>
+    </dl>
   );
 }
 export function EmptyState({
@@ -276,9 +298,6 @@ export function EmptyState({
 }) {
   return (
     <div className="empty-state">
-      <span className="empty-icon">
-        <ArrowUpRight size={32} />
-      </span>
       <h2>{title}</h2>
       <p>{body}</p>
       <button className="button primary" onClick={onClick}>
